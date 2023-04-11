@@ -5,29 +5,43 @@ import com.parkit.parkingsystem.model.Ticket;
 
 public class FareCalculatorService {
 
-    public void calculateFare(Ticket ticket){
-        if( (ticket.getOutTime() == null) || (ticket.getOutTime().before(ticket.getInTime())) ){
-            throw new IllegalArgumentException("Out time provided is incorrect:"+ticket.getOutTime().toString());
+    public void calculateFare(Ticket ticket, boolean discount) {
+        if (ticket.getOutTime() == null || ticket.getOutTime().before(ticket.getInTime())) {
+            throw new IllegalArgumentException("Out time provided is incorrect: " + ticket.getOutTime());
         }
+        // Initialisation du temps en millisecondes
+        long inTimeMillis = ticket.getInTime().getTime();
+        long outTimeMillis = ticket.getOutTime().getTime();
 
-        int inHour = ticket.getInTime().getHours();
-        int outHour = ticket.getOutTime().getHours();
-
-        //TODO: Some tests are failing here. Need to check if this logic is correct
-        long duration = ticket.getOutTime().getTime() - ticket.getInTime().getTime();
-        duration = duration /(60*1000)%60;
-        duration += 60*((ticket.getOutTime().getTime() - ticket.getInTime().getTime()));
-
-        switch (ticket.getParkingSpot().getParkingType()){
-            case CAR: {
-                ticket.setPrice(duration * Fare.CAR_RATE_PER_HOUR);
+        // Convertir les millisecondes en heures :
+        double durationInHours = (outTimeMillis - inTimeMillis) / (1000.0 * 60.0 * 60.0);
+        if (durationInHours <0.5){
+          ticket.setPrice(0);
+        } else {
+          //Calcul du taux horaire en fonction du type de véhicule
+          double fareRate = 0;
+          switch (ticket.getParkingSpot().getParkingType()) {
+            case CAR:
+                fareRate = Fare.CAR_RATE_PER_HOUR;
                 break;
-            }
-            case BIKE: {
-                ticket.setPrice(duration * Fare.BIKE_RATE_PER_HOUR);
+            case BIKE:
+                fareRate = Fare.BIKE_RATE_PER_HOUR;
                 break;
-            }
-            default: throw new IllegalArgumentException("Unkown Parking Type");
+            default:
+                throw new IllegalArgumentException("Unknown Parking Type");
         }
-    }
+        //Calcul du prix total du ticket en fonction du temps et du taux horaire
+        double price = durationInHours * fareRate;
+        //Application de la réduction des 5% si le paramètre discount est vrai
+        if(discount){
+          price *= 0.95;
+        }
+        //Mise à jour du prix avec le prix calculé juste avant
+        ticket.setPrice(price);
+        }
+}
+//Méthode calculateFare avec le paramètre discount à false par défaut
+public void calculateFare(Ticket ticket){
+  calculateFare(ticket, false);
+}
 }
