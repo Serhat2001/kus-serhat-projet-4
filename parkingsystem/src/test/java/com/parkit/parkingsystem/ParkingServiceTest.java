@@ -31,21 +31,21 @@ public class ParkingServiceTest {
     @Mock
     private static TicketDAO ticketDAO;
 
+    private Ticket ticket;
+
     @BeforeEach
     private void setUpPerTest() {
         try {
-            when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+            
 
             ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);
 
-            Ticket ticket = new Ticket();
+            ticket = new Ticket();
             ticket.setInTime(new Date(System.currentTimeMillis() - (60*60*1000)));
             ticket.setParkingSpot(parkingSpot);
             ticket.setVehicleRegNumber("ABCDEF");
-            when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
-            when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
-
-            when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
+            
+            
 
             parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         } catch (Exception e) {
@@ -55,9 +55,13 @@ public class ParkingServiceTest {
     }
 
     @Test
-    public void processExitingVehicleTest(){
+    public void processExitingVehicleTest() throws Exception {
         /*Mock de l'appel à la méthode "getNbTicket" de l'objet "ticketDAO" et on retourne 1 peu importe la chaîne
         passée en paramètre.*/
+        when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+        when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
+        when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(true);
         //Arrange
         when(ticketDAO.getNbTicket(anyString())).thenReturn(1);
         //Simule le processus de sortie du véhicule
@@ -74,18 +78,60 @@ public class ParkingServiceTest {
     }
 
     @Test
-    public void testProcessIncomingVehicle() {
+    public void testProcessIncomingVehicle() throws Exception {
+        when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+        //Test du cas où le ticket est déhà existant
+        parkingService.processIncomingVehicle();
 
-        //ParkingSpot parkingSpot = new ParkingSpot(2, ParkingType.CAR, true);
-        //when(parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR)).thenReturn(parkingSpot.getId());
-        //when(parkingSpotDAO.updateParking(any(ParkingSpot.class))).thenReturn(true);
+        verify(parkingSpotDAO, times(0)).updateParking(any(ParkingSpot.class));
+        
+        verify(ticketDAO, times(0)).saveTicket(any(Ticket.class));
+        verify(inputReaderUtil, times(1)).readVehicleRegistrationNumber();
+
+        //Test du cas d'un nouveau ticket
+        when(parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR)).thenReturn(2);
+        when(inputReaderUtil.readSelection()).thenReturn(1);
+        when(ticketDAO.getTicket(anyString())).thenReturn(null);
 
         parkingService.processIncomingVehicle();
 
         verify(parkingSpotDAO, times(1)).updateParking(any(ParkingSpot.class));
-        /*
         verify(ticketDAO, times(1)).saveTicket(any(Ticket.class));
-        verify(inputReaderUtil, times(1)).readVehicleRegistrationNumber();*/
+    }
+    
+    @Test
+    public void processExitingVehicleTestUnableUpdate() throws Exception {
+        when(ticketDAO.getTicket(anyString())).thenReturn(ticket);
+        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+        when(ticketDAO.updateTicket(any(Ticket.class))).thenReturn(false);
+        parkingService.processExitingVehicle();
     }
 
+    @Test
+    public void testGetNextParkingNumberIfAvailable(){
+        when(parkingSpotDAO.getNextAvailableSlot(ParkingType.CAR)).thenReturn(1);
+        when(inputReaderUtil.readSelection()).thenReturn(1);
+        ParkingSpot parkingSpot = parkingService.getNextParkingNumberIfAvailable();
+
+        assertEquals(parkingSpot.getId(), 1);
+        assertTrue(parkingSpot.isAvailable());
+    }
+    
+    @Test
+    public void testGetNextParkingNumberIfAvailableParkingNumberNotFound() {
+        
+        when(parkingSpotDAO.getNextAvailableSlot(any(ParkingType.class))).thenReturn(0);
+        when(inputReaderUtil.readSelection()).thenReturn(1);
+
+        assertNull(parkingService.getNextParkingNumberIfAvailable());
+    }
+    
+    @Test
+    public void testGetNextParkingNumberIfAvailableParkingNumberWrongArgument() {
+
+        when(inputReaderUtil.readSelection()).thenReturn(3);
+
+        assertNull(parkingService.getNextParkingNumberIfAvailable()); 
+    }
 }
