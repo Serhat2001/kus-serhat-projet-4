@@ -7,7 +7,7 @@ public class FareCalculatorService {
 
     public void calculateFare(Ticket ticket, boolean discount) {
         if (ticket.getOutTime() == null || ticket.getOutTime().before(ticket.getInTime())) {
-            throw new IllegalArgumentException("Out time provided is incorrect: " + ticket.getOutTime());
+        throw new IllegalArgumentException("Out time provided is incorrect: " + ticket.getOutTime());
         }
         // Initialisation du temps en millisecondes
         long inTimeMillis = ticket.getInTime().getTime();
