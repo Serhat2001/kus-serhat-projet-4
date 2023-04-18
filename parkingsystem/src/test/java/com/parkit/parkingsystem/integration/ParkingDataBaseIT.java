@@ -1,5 +1,6 @@
 package com.parkit.parkingsystem.integration;
 
+import com.parkit.parkingsystem.config.DataBaseConfig;
 import com.parkit.parkingsystem.dao.ParkingSpotDAO;
 import com.parkit.parkingsystem.dao.TicketDAO;
 import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
@@ -19,6 +20,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.when;
+
+import java.util.Date;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -85,15 +89,21 @@ public class ParkingDataBaseIT {
     }
 
     @Test
-    public void testParkingLotExitRecurringUser() {
-        testParkingACar();
-        testParkingLotExit();
+    public void testParkingLotExitRecurringUser(){
+        /*testParkingACar();
+        testParkingLotExit();*/
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+
         parkingService.processIncomingVehicle();
         parkingService.processExitingVehicle();
         parkingService.processIncomingVehicle();
         parkingService.processExitingVehicle();
 
+        Ticket ticket = ticketDAO.getTicket("ABCDEF");
+        double dbPrice = ticket.getPrice();
+        FareCalculatorService fareCalculatorService = new FareCalculatorService();
+        fareCalculatorService.calculateFare(ticket, true);
 
+        assertEquals(dbPrice, ticket.getPrice());
     }
 }
