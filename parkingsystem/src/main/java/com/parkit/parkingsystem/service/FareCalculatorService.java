@@ -40,8 +40,8 @@ public class FareCalculatorService {
         ticket.setPrice(price);
         }
 }
-//Méthode calculateFare avec le paramètre discount à false par défaut
-public void calculateFare(Ticket ticket){
-  calculateFare(ticket, false);
-}
+  //Méthode calculateFare avec le paramètre discount à false par défaut
+  public void calculateFare(Ticket ticket){
+    calculateFare(ticket, false);
+  }
 }

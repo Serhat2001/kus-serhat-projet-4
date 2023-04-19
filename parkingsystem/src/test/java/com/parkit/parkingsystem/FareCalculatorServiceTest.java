@@ -69,11 +69,11 @@ public class FareCalculatorServiceTest {
         ticket.setParkingSpot(parkingSpot);
         assertThrows(NullPointerException.class, new Executable() {
     // Changement de l'expression lambda par une expression avec une classe anonyme
-    @Override
-    public void execute() throws Throwable {
-        fareCalculatorService.calculateFare(ticket);
-    }
-});
+            @Override
+            public void execute() throws Throwable {
+                fareCalculatorService.calculateFare(ticket);
+            }
+        });
     }
 
     @Test
@@ -88,11 +88,11 @@ public class FareCalculatorServiceTest {
         ticket.setParkingSpot(parkingSpot);
         assertThrows(IllegalArgumentException.class, new Executable() {
     // Changement de l'expression lambda par une expression avec une classe anonyme
-    @Override
-    public void execute() throws Throwable {
-        fareCalculatorService.calculateFare(ticket);
-    }
-});
+            @Override
+            public void execute() throws Throwable {
+                fareCalculatorService.calculateFare(ticket);
+            }
+        });
     }
 
     @Test
